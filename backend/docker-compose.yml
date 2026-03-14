@@ -1,6 +1,8 @@
 services:
   wedding-api:
     build: .
+    environment:
+      - WEDDING_API_KEY=${WEDDING_API_KEY}
     volumes:
       - wedding-data:/data
     restart: unless-stopped
