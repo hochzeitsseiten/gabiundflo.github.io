@@ -1,13 +1,32 @@
 services:
   wedding-api:
     build: .
+    # Port is only exposed for local debugging.
+    # cloudflared reaches the API via the internal Docker network (wedding-api:8000).
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       - WEDDING_API_KEY=your-secret-key-here
     volumes:
       - wedding-data:/data
     restart: unless-stopped
+    networks:
+      - wedding-net
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      # Paste your tunnel token here:  cloudflared tunnel token <tunnel-name>
+      - TUNNEL_TOKEN=your-tunnel-token-here
+    restart: unless-stopped
+    networks:
+      - wedding-net
+    depends_on:
+      - wedding-api
+
+networks:
+  wedding-net:
 
 volumes:
   wedding-data:
