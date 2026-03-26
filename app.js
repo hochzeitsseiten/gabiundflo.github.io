@@ -6,7 +6,7 @@
     'use strict';
 
     // ---- Configuration ----
-    const API_BASE = window.WEDDING_API_BASE || 'https://wedding_api.batterybytes.de';
+    const API_BASE = window.WEDDING_API_BASE || 'https://wedding-api.batterybytes.de';
 
     // ---- Storage helpers (localStorage for persistence) ----
     function setStored(name, value) {
