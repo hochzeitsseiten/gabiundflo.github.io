@@ -334,6 +334,11 @@ h2 {
     max-width: 92vw;
     max-height: 88vh;
     border-radius: 12px;
+    transform: translate(0px, 0px) scale(1);
+    transition: transform 0.2s ease;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-drag: none;
 }
 
 .lightbox-nav {
