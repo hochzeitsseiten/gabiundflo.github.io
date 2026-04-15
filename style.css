@@ -86,6 +86,7 @@ html, body {
 
 .section-gallery {
     background: var(--white);
+    justify-content: stretch;
 }
 
 .section-game {
@@ -229,11 +230,11 @@ h2 {
 /* ---- Gallery (full-page grid, horizontal swipe) ---- */
 .gallery-page {
     width: 100%;
-    height: 100%;
+    height: calc(100vh - 4rem);
     display: flex;
     flex-direction: column;
     padding: 0 0.5rem;
-    max-height: 100vh;
+    max-width: 900px;
     overflow: hidden;
 }
 
@@ -250,40 +251,34 @@ h2 {
     flex: 1;
     overflow: hidden;
     position: relative;
+    min-height: 0;
 }
 
 .gallery-grid-scroll {
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     height: 100%;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    scroll-snap-type: x mandatory;
-}
-
-.gallery-grid-scroll::-webkit-scrollbar {
-    display: none;
+    scrollbar-width: thin;
+    scroll-snap-type: y proximity;
+    overscroll-behavior: contain;
 }
 
 .gallery-grid {
     display: grid;
-    grid-auto-flow: column;
-    grid-template-rows: repeat(var(--gallery-rows, 3), 1fr);
-    grid-auto-columns: min-content;
-    gap: 6px;
-    padding: 6px;
-    height: 100%;
-    min-width: min-content;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 8px;
+    padding: 8px;
+    align-content: start;
 }
 
 .gallery-item {
-    width: var(--gallery-cell, 110px);
-    height: var(--gallery-cell, 110px);
+    width: 100%;
+    aspect-ratio: 1 / 1;
     border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
     transition: transform 0.15s;
-    scroll-snap-align: start;
 }
 
 .gallery-item:active {
@@ -319,6 +314,34 @@ h2 {
     max-width: 92vw;
     max-height: 88vh;
     border-radius: 12px;
+}
+
+.lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+    font-size: 1.7rem;
+    line-height: 1;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.lightbox-prev {
+    left: 0.8rem;
+}
+
+.lightbox-next {
+    right: 0.8rem;
+}
+
+.lightbox-nav:active {
+    background: rgba(255, 255, 255, 0.35);
 }
 
 .lightbox-close {
@@ -429,5 +452,9 @@ h2 {
 @media (min-width: 600px) {
     h1 {
         font-size: 2.4rem;
+    }
+
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
 }

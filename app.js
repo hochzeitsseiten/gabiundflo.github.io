@@ -169,38 +169,53 @@
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightboxImg');
     const lightboxClose = document.getElementById('lightboxClose');
+    const lightboxPrev = document.getElementById('lightboxPrev');
+    const lightboxNext = document.getElementById('lightboxNext');
     const btnRefreshGallery = document.getElementById('btnRefreshGallery');
+    let galleryImageList = [];
+    let currentLightboxIndex = -1;
+    let lightboxTouchStartX = null;
 
-    function computeGalleryGrid() {
-        var section = document.getElementById('sectionGallery');
-        var headerH = document.querySelector('.gallery-header').offsetHeight;
-        var hintsH = 60; // space for scroll hints
-        var availableH = section.clientHeight - headerH - hintsH;
-        var gap = 6;
-        // Determine how many rows fit
-        var minCell = 100;
-        var rows = Math.max(2, Math.floor(availableH / (minCell + gap)));
-        var cellSize = Math.floor((availableH - (rows - 1) * gap) / rows);
-        cellSize = Math.max(80, Math.min(cellSize, 160));
-        document.documentElement.style.setProperty('--gallery-rows', rows);
-        document.documentElement.style.setProperty('--gallery-cell', cellSize + 'px');
-        return { rows: rows, cellSize: cellSize };
+    function closeLightbox() {
+        lightbox.style.display = 'none';
+        lightboxImg.src = '';
+        currentLightboxIndex = -1;
+    }
+
+    function showLightboxImage(index) {
+        if (!galleryImageList.length) return;
+
+        var normalized = (index + galleryImageList.length) % galleryImageList.length;
+        currentLightboxIndex = normalized;
+        lightboxImg.src = '';
+        lightbox.style.display = 'flex';
+
+        var image = galleryImageList[normalized];
+        fetchAuthenticatedImage(API_BASE + image.full).then(function (blobUrl) {
+            if (currentLightboxIndex !== normalized) return;
+            lightboxImg.src = blobUrl;
+        });
+    }
+
+    function navigateLightbox(step) {
+        if (currentLightboxIndex === -1) return;
+        showLightboxImage(currentLightboxIndex + step);
     }
 
     async function loadGallery() {
         try {
-            var gridInfo = computeGalleryGrid();
             var data = await apiGet('/gallery');
+            galleryImageList = data.images || [];
             galleryItems.innerHTML = '';
 
-            if (!data.images || data.images.length === 0) {
+            if (!galleryImageList.length) {
                 galleryEmpty.style.display = '';
                 return;
             }
 
             galleryEmpty.style.display = 'none';
 
-            data.images.forEach(function (img) {
+            galleryImageList.forEach(function (img, index) {
                 var div = document.createElement('div');
                 div.className = 'gallery-item';
                 var imgEl = document.createElement('img');
@@ -212,13 +227,7 @@
                     imgEl.src = blobUrl;
                 });
 
-                div.addEventListener('click', function () {
-                    lightboxImg.src = '';
-                    lightbox.style.display = 'flex';
-                    fetchAuthenticatedImage(API_BASE + img.full).then(function (blobUrl) {
-                        lightboxImg.src = blobUrl;
-                    });
-                });
+                div.addEventListener('click', function () { showLightboxImage(index); });
 
                 galleryItems.appendChild(div);
             });
@@ -232,16 +241,50 @@
     });
 
     lightboxClose.addEventListener('click', function () {
-        lightbox.style.display = 'none';
-        lightboxImg.src = '';
+        closeLightbox();
     });
 
     lightbox.addEventListener('click', function (e) {
         if (e.target === lightbox) {
-            lightbox.style.display = 'none';
-            lightboxImg.src = '';
+            closeLightbox();
         }
     });
+
+    lightboxPrev.addEventListener('click', function (e) {
+        e.stopPropagation();
+        navigateLightbox(-1);
+    });
+
+    lightboxNext.addEventListener('click', function (e) {
+        e.stopPropagation();
+        navigateLightbox(1);
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (lightbox.style.display === 'none') return;
+        if (e.key === 'ArrowLeft') navigateLightbox(-1);
+        if (e.key === 'ArrowRight') navigateLightbox(1);
+        if (e.key === 'Escape') closeLightbox();
+    });
+
+    lightbox.addEventListener('touchstart', function (e) {
+        if (!e.touches || !e.touches.length) return;
+        lightboxTouchStartX = e.touches[0].clientX;
+    }, { passive: true });
+
+    lightbox.addEventListener('touchend', function (e) {
+        if (lightboxTouchStartX === null) return;
+        var touch = e.changedTouches && e.changedTouches[0];
+        if (!touch) {
+            lightboxTouchStartX = null;
+            return;
+        }
+        var deltaX = touch.clientX - lightboxTouchStartX;
+        lightboxTouchStartX = null;
+        if (Math.abs(deltaX) < 40) return;
+        if (deltaX < 0) navigateLightbox(1);
+        if (deltaX > 0) navigateLightbox(-1);
+    }, { passive: true });
 
     // ---- Game mode ----
     const taskText = document.getElementById('taskText');
